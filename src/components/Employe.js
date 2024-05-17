@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { setData } from '../redux/actions/Action';
@@ -10,23 +10,27 @@ const Employe = ({ employeData, setData }) => {
         getEmpData();
     }, []);
 
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [desg, setDesg] = useState('');
-    const [loc, setLoc] = useState('');
-    const [gender, setGender] = useState('');
-    const [image, setImage] = useState(null);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        desg: '',
+        loc: '',
+        gender: '',
+        image: null
+    });
+
     const [id, setId] = useState('');
     const [isEditMode, setIsEditMode] = useState(false); // Track edit mode
     const [modalVisible, setModalVisible] = useState(false); // Modal visibility state
     const [selectedImage, setSelectedImage] = useState(''); // Selected image URL
     const [displayEmployee, setDisplayEmployee] = useState({
         Fname: "",
-        Lname:"",
+        Lname: "",
         Desg: "",
         lOC: ""
     });
-    
+    const inputRef = useRef(null);
+
 
     const getEmpData = async () => {
         try {
@@ -37,10 +41,19 @@ const Employe = ({ employeData, setData }) => {
         }
     };
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
     const handleAddEmployee = async () => {
-        if (firstName === "" || lastName === "" || desg === "" || loc === "" || gender === "" || !image) {
+
+        const { firstName, lastName, desg, loc, gender, image } = formData;
+        if (!firstName || !lastName || !desg || !loc || !gender || !image) {
             alert("Please enter all details");
-        } else {
+            // Prevent further processing or submit action
+        }
+        else {
             try {
                 const base64Image = await convertImageToBase64(image);// calling the base64 fuction to get url assign to new varible
                 const newEmployee = {
@@ -54,12 +67,15 @@ const Employe = ({ employeData, setData }) => {
                 await postEmploye(newEmployee);
                 getEmpData();
                 // Clear input fields after adding employee
-                setFirstName('');
-                setLastName('');
-                setDesg('');
-                setLoc('');
-                setGender('');
-                setImage(null);
+                setFormData({
+                    firstName: '',
+                    lastName: '',
+                    desg: '',
+                    loc: '',
+                    gender: '',
+                    image: null
+                });
+                inputRef.current.value = "";
             } catch (error) {
                 console.error("Error adding employee:", error);
             }
@@ -81,19 +97,24 @@ const Employe = ({ employeData, setData }) => {
     const handleEdit = (id) => {
         const selectEmployee = employeData.find((employee) => employee.id === id);
         setId(selectEmployee.id);
-        setFirstName(selectEmployee.FirstName);
-        setLastName(selectEmployee.LastName);
-        setDesg(selectEmployee.Desg);
-        setLoc(selectEmployee.Loc);
-        setGender(selectEmployee.Gender);
-        setImage(null); // Reset image field
+        setFormData({
+            firstName: selectEmployee.FirstName,
+            lastName: selectEmployee.LastName,
+            desg: selectEmployee.Desg,
+            loc: selectEmployee.Loc,
+            gender: selectEmployee.Gender,
+            image: null
+        });
         setIsEditMode(true); // Set edit mode
     };
 
     const handleUpdate = async () => {
-        if (firstName === "" || lastName === "" || desg === "" || loc === "" || gender === "" || !image) {
+        const { firstName, lastName, desg, loc, gender, image } = formData;
+        if (!firstName || !lastName || !desg || !loc || !gender || !image) {
             alert("Please enter all details");
-        } else {
+            // Prevent further processing or submit action
+        }
+        else {
             try {
                 const base64Image = await convertImageToBase64(image); // calling the base64 fuction to get url assign to new varible
                 const updatedEmployee = {
@@ -107,19 +128,22 @@ const Employe = ({ employeData, setData }) => {
                 await updateEmploye(id, updatedEmployee);
                 getEmpData();
                 // Clear input fields after updating employee
-                setFirstName('');
-                setLastName('');
-                setDesg('');
-                setLoc('');
-                setGender('');
-                setImage(null);
+                setFormData({
+                    firstName: '',
+                    lastName: '',
+                    desg: '',
+                    loc: '',
+                    gender: '',
+                    image: null
+                });
                 setIsEditMode(false); // Exit edit mode
+                inputRef.current.value = "";
             } catch (error) {
                 console.error("Error updating employee:", error);
             }
         }
     };
-  // convert to image to base64 url
+
     const convertImageToBase64 = (imageFile) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -132,7 +156,7 @@ const Employe = ({ employeData, setData }) => {
     };
 
     const handledImageUrl = (e) => {
-        setImage(e.target.files[0]); // Update image state
+        setFormData({ ...formData, image: e.target.files[0] });
     };
 
     const openModal = (imageUrl) => {
@@ -143,15 +167,14 @@ const Employe = ({ employeData, setData }) => {
     const closeModal = () => {
         setModalVisible(false);
     };
-    const displyDetails = (name,lname, desg, loc) => {
+    const displyDetails = (name, lname, desg, loc) => {
         setDisplayEmployee({
             Fname: name,
-            Lname:lname,
+            Lname: lname,
             Desg: desg,
             Loc: loc
         });
     };
-    
 
     return (
         <>
@@ -161,51 +184,52 @@ const Employe = ({ employeData, setData }) => {
                     <input
                         className="form-control mb-3"
                         type="text"
-                        value={firstName}
+                        name="firstName"
+                        value={formData.firstName}
                         placeholder="Enter first name"
-                        onChange={(e) => setFirstName(e.target.value)}
+                        onChange={handleInputChange}
                     />
                 </div>
-                {/* Other input fields */}
-                   
-
                 <div className="form-group col-12 col-sm-4">
                     <input
                         className="form-control mb-3"
                         type="text"
-                        value={lastName}
+                        name="lastName"
+                        value={formData.lastName}
                         placeholder="Enter last name"
-                        onChange={(e) => setLastName(e.target.value)}
+                        onChange={handleInputChange}
                     />
                 </div>
                 <div className="form-group col-12 col-sm-4">
                     <input
                         className="form-control mb-3"
                         type="text"
-                        value={desg}
+                        name="desg"
+                        value={formData.desg}
                         placeholder="Enter Designation"
-                        onChange={(e) => setDesg(e.target.value)}
+                        onChange={handleInputChange}
                     />
                 </div>
                 <div className="form-group col-12 col-sm-4">
                     <input
                         className="form-control mb-3"
                         type="text"
-                        value={loc}
+                        name="loc"
+                        value={formData.loc}
                         placeholder="Enter Location"
-                        onChange={(e) => setLoc(e.target.value)}
+                        onChange={handleInputChange}
                     />
                 </div>
                 <div className="form-group col-12 col-sm-4 text-start">
-                <label > Select Gender</label>
+                    <label > Select Gender</label>
                     <div>
                         <input
                             type="radio"
                             id="male"
                             name="gender"
                             value="Male"
-                            checked={gender === "Male"}
-                            onChange={(e) => setGender(e.target.value)}
+                            checked={formData.gender === "Male"}
+                            onChange={handleInputChange}
                         />
                         <label htmlFor="male">Male</label>
                     </div>
@@ -215,8 +239,8 @@ const Employe = ({ employeData, setData }) => {
                             id="female"
                             name="gender"
                             value="Female"
-                            checked={gender === "Female"}
-                            onChange={(e) => setGender(e.target.value)}
+                            checked={formData.gender === "Female"}
+                            onChange={handleInputChange}
                         />
                         <label htmlFor="female">Female</label>
                     </div>
@@ -224,6 +248,7 @@ const Employe = ({ employeData, setData }) => {
                 <div className="form-group col-12 col-sm-4">
                     <input
                         className="form-control mb-3"
+                        ref={inputRef}
                         type="file"
                         onChange={handledImageUrl}
                     />
@@ -258,12 +283,12 @@ const Employe = ({ employeData, setData }) => {
                                 <td>{employee.Loc}</td>
                                 <td>{employee.Gender}</td>
                                 <td>
-                                <button className="btn" onClick={() => { openModal(employee.Image); displyDetails(employee.FirstName,employee.LastName,employee.Desg,employee.Loc) }}>
+                                    <button className="btn" onClick={() => { openModal(employee.Image); displyDetails(employee.FirstName, employee.LastName, employee.Desg, employee.Loc) }}>
 
-                                    <Icon icon="mdi:eye" />
+                                        <Icon icon="mdi:eye" />
                                     </button>
                                 </td>
-                                <td><button className='btn' onClick={() => handleEdit(employee.id)}><Icon icon="lucide:edit" /></button></td>
+                                <td><button className='btn' onClick={() => handleEdit(employee.id)}><Icon className='text-success' icon="lucide:edit" /></button></td>
                                 <td><button className='btn' onClick={() => handleDelete(employee.id)}><Icon className='text-danger' icon="material-symbols:delete" /></button></td>
                             </tr>
                         ))}
@@ -278,15 +303,15 @@ const Employe = ({ employeData, setData }) => {
                             <div className="modal-header  text-center">
                                 <h5 className="modal-title">Employee  Detalis</h5>
                                 {/* <button type="button" className="close position-absolute top-1 end-0 me-3 text-danger" onClick={closeModal}> */}
-                                <Icon className='close position-absolute top-1 end-0 me-3 text-danger fa-1' icon="iconamoon:close-bold"  onClick={closeModal}/>
+                                <Icon className='close position-absolute top-1 end-0 me-3 text-danger fa-1' icon="iconamoon:close-bold" onClick={closeModal} />
                                 {/* </button> */}
                             </div>
                             <div className="modal-body">
-                                <img  src={selectedImage} alt="Employee" id='empimg' className="img-fluid " />
+                                <img src={selectedImage} alt="Employee" id='empimg' className="img-fluid " />
                             </div>
                             <h3 > Name :{displayEmployee.Fname} {displayEmployee.Lname}</h3>
                             <h3 >Designation :{displayEmployee.Desg}</h3>
-                            <h3 >Location: { displayEmployee.Loc}</h3>
+                            <h3 >Location: {displayEmployee.Loc}</h3>
                         </div>
                     </div>
                 </div>
