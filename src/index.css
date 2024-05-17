@@ -11,3 +11,21 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+#empimg{
+ width: 200px;
+ height: 200px;
+  border-radius: 50%;
+}
+.modal{
+  font-style: italic;
+  font-family: monospace;
+  color: rgb(187, 105, 10);
+  background-color: rgb(116, 203, 220);
+}
+
+.modal-content{
+  background-color: rgb(198, 239, 86);
+}
+.close {
+  font-size: 30px; /* Adjust the value as needed */
+}
