@@ -1,11 +1,13 @@
 import axios from "axios";
 
+
 const baseURL = 'https://react-crud-dbffc-default-rtdb.firebaseio.com';
 
 export const getEmploye = async () => {
     try {
         const response = await axios.get(`${baseURL}/employe.json`);
         const jsonData = response.data;
+      
         console.log(jsonData)
         if (jsonData === null) {
             return [];
